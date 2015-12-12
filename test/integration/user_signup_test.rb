@@ -4,6 +4,7 @@ class UserSignupTest < ActionDispatch::IntegrationTest
   # test "the truth" do
   #   assert true
   # end
+  
   test "invalid signup information" do
   get signup_path
   #make sure there is no difference before and after making a new user
@@ -29,5 +30,11 @@ class UserSignupTest < ActionDispatch::IntegrationTest
                             password_confirmation: "foobar" }
     end
     assert_template 'users/show'
+    #use a test helper function
+    assert is_logged_in?
+    
   end
+  
+  
+  
 end

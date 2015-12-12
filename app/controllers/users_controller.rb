@@ -9,10 +9,13 @@ class UsersController < ApplicationController
     @user = User.new
   end
   
+  #when you push the create account
   def create
     #to avoid unwanted/unsafe requests we replace params[:user]
     @user = User.new(user_params)
     if @user.save
+      #logs in a user after they make account
+      log_in(@user)
        flash[:success] = "Welcome to Twitter Clone!"
       redirect_to @user
     else
