@@ -11,7 +11,8 @@ class SessionsController < ApplicationController
       #this line adds checkbox functionality
       params[:session][:remember_me] == '1' ? remember(user) : forget(user)
       #rails auto converts this to route to the users profile page - user_url(user)
-      redirect_to user
+      #add method defined in helper
+      redirect_back_or user
     else
       #this produces a bug so we should fix it with a test
       # using flash.now ensures the message appears on rendered pages

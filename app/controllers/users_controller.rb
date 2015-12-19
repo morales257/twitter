@@ -1,4 +1,16 @@
 class UsersController < ApplicationController
+  before_action :logged_in_user, only: [:index, :edit, :update, :destroy]
+  before_action :correct_user, only: [:edit, :update]
+  #ensures only admin can delete users
+  before_action :admin_user, only: :destroy
+  
+  #for will_paginate to work, the results must be paginated using the paginate 
+  #method
+  def index
+    #paginate returns 30 users by default on a given page
+    #will_paginate generates a page view using params[:page]
+    @users = User.paginate(page: params[:page])
+  end
   
   def show
     @user = User.find(params[:id])
@@ -23,9 +35,56 @@ class UsersController < ApplicationController
     end
   end
   
+  def edit
+    #to edit the user first we have to pull the relevant user from the db
+     #can eliminate assignment due to correct_user helper
+    #@user = User.find(params[:id])
+  end
+  
+  def update
+    #can eliminate assignment due to correct_user helper
+   # @user = User.find(params[:id])
+    if @user.update_attributes(user_params)
+      flash[:success] = "Profile updated"
+      redirect_to @user
+      #Handle a successful update
+    else
+      #User model validations and error messages will bring up errors
+      #and reroute to the edit page
+      render 'edit'
+    end
+  end
+  
+  #delete request sends to the destroy action
+  def destroy
+    User.find(params[:id]).destroy
+    flash[:success] = "User deleted"
+    redirect_to users_url
+  end
+  
   private
     #initializes an appropriate new hash
     def user_params
       params.require(:user).permit(:name, :email, :password, :password_confirmation)
+    end
+    
+    #confirms a logged in user
+    def logged_in_user
+      unless logged_in?
+      store_location
+      flash[:danger] = "Please log in."
+      redirect_to login_url
+      end
+    end
+    
+    #make sure the user searched and being edited is the same user being logged in
+    #(verified with a cookie or token)
+    def correct_user
+      @user = User.find(params[:id])
+      redirect_to(root_url) unless current_user?(@user)
+    end
+    
+    def admin_user
+      redirect_to(root_url) unless current_user.admin?
     end
 end

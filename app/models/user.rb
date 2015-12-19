@@ -14,13 +14,15 @@ class User < ActiveRecord::Base
   #allows you to save a hashed password
   #presence validation and matchin validation when login in
   #authentication that returns user if password is correct
-  validates :password, presence: true, length: {minimum: 6}
+  #we allow nil for when users dont want to update a password, but not for
+  #signing up, because has_secure_password has its own presence validator
+  validates :password, presence: true, length: {minimum: 6}, allow_nil: true
   
    def User.digest(string)
     cost = ActiveModel::SecurePassword.min_cost ? BCrypt::Engine::MIN_COST :
                                                   BCrypt::Engine.cost
     BCrypt::Password.create(string, cost: cost)
-  end
+   end
 
  #step 1 to remembering a user
   def User.new_token
