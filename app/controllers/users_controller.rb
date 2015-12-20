@@ -26,10 +26,14 @@ class UsersController < ApplicationController
     #to avoid unwanted/unsafe requests we replace params[:user]
     @user = User.new(user_params)
     if @user.save
+      # =WANT THEM TO ACTIVATE ACCOUNT FIRST
+      @user.send_activation_email
+      flash[:info] = "Please check your email to activate your account."
+      redirect_to root_url
       #logs in a user after they make account
-      log_in(@user)
-       flash[:success] = "Welcome to Twitter Clone!"
-      redirect_to @user
+     # log_in(@user)
+      # flash[:success] = "Welcome to Twitter Clone!"
+      #redirect_to @user
     else
       render 'new'
     end

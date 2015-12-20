@@ -73,6 +73,6 @@ class UserTest < ActiveSupport::TestCase
   
   #scenario with 2 different browsers, starting with a user with no remember digest
    test "authenticated? should return false for a user with nil digest" do
-    assert_not @user.authenticated?('')
+    assert_not @user.authenticated?(:remember, '')
   end
 end

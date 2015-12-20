@@ -1,6 +1,8 @@
 class User < ActiveRecord::Base
- attr_accessor :remember_token
+ attr_accessor :remember_token, :activation_token
   before_save {self.email = email.downcase}
+  #call create_activation_digest before creating a new user in the db
+  before_create :create_activation_digest
   #validates is a method with two arguments, a symbol and a hash
   validates :name, presence: true, length: {maximum: 50}
   VALID_EMAIL_REGEX = /\A[\w+\-.]+@[a-z\d\-.]+\.[a-z]+\z/i
@@ -39,15 +41,35 @@ class User < ActiveRecord::Base
    update_attribute(:remember_digest, User.digest(remember_token))
   end
   
-  def authenticated?(remember_token)
-   #to make sure user is logged out in 2 separate browsers...
-   return false if remember_digest.nil?
+  #update authenticated? to take activation tokens as well
+  def authenticated?(attribute, token)
+   digest = self.send("#{attribute}_digest")
+   #to make sure user is logged out in 2 separate browsers use remember_digest
+   return false if digest.nil?
    #compare the hash with the remember token
    #not the same remember_token as above, but rather a local variable
-   BCrypt::Password.new(remember_digest).is_password?(remember_token)
+   BCrypt::Password.new(digest).is_password?(token)
   end
   
   def forget
    update_attribute(:remember_digest, nil)
+  end
+  
+  #activated an account
+  def activate
+   update_attribute(:activated, true)
+   update_attribute(:activated_at, Time.zone.now)
+  end
+  
+  #Sends activation email
+  def send_activation_email
+   UserMailer.account_activation(self).deliver_now
+  end
+  
+  private
+  
+  def create_activation_digest
+   self.activation_token = User.new_token
+   self.activation_digest = User.digest(activation_token)
   end
 end
