@@ -10,6 +10,9 @@ class User < ActiveRecord::Base
   #without it foo@bar.com != FOO@BAR.COM
   validates :email, presence: true, length: {maximum: 255}, 
                 format: {with: VALID_EMAIL_REGEX}, uniqueness: {case_sensitive: false}
+ 
+ #...each user can have many microposts
+ has_many :microposts, dependent: :destroy
   
   has_secure_password
   #TO WORK, MODEL NEEDS password_digest attribute
@@ -83,6 +86,13 @@ class User < ActiveRecord::Base
   def password_reset_expired?
    #read as reset sent earlier than 2 hours ago
    reset_sent_at < 2.hours.ago
+  end
+  
+  #Defines a proto-feed and currently shows all the users posts
+  # ? escapes the id propoerly before being included in the underlying SQL
+  #query therby avoiding SQL injection
+  def feed
+   Micropost.where("user_id= ?", id)
   end
   
   private

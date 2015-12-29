@@ -26,7 +26,7 @@ class UserLoginTest < ActionDispatch::IntegrationTest
     #there, it makes sure the following is showing
     assert_template 'users/show'
     assert_select "a[href=?]", login_path, count: 0
-    assert_select "a[href=?", logout_path
+    assert_select "a[href=?]", logout_path
     assert_select "a[href=?]", user_path(@user)
     #test to make sure session deletes and links change with log out
     delete logout_path

@@ -14,6 +14,7 @@ class UsersController < ApplicationController
   
   def show
     @user = User.find(params[:id])
+    @microposts = @user.microposts.paginate(page: params[:page])
     #debugger
   end
   #sign up page routes to new
@@ -72,14 +73,7 @@ class UsersController < ApplicationController
       params.require(:user).permit(:name, :email, :password, :password_confirmation)
     end
     
-    #confirms a logged in user
-    def logged_in_user
-      unless logged_in?
-      store_location
-      flash[:danger] = "Please log in."
-      redirect_to login_url
-      end
-    end
+    
     
     #make sure the user searched and being edited is the same user being logged in
     #(verified with a cookie or token)
