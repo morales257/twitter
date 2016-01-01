@@ -13,6 +13,31 @@ class User < ActiveRecord::Base
  
  #...each user can have many microposts
  has_many :microposts, dependent: :destroy
+ 
+ # because there does not exist and active_relationship symbol, we have to tell
+ #rails which class to look for
+ #rails makes associations through the foreign_key
+ #rails by default expects the foreign key to be <class>_id, but since we are
+ #using follower_id for association, we have to make it explicit
+ has_many :active_relationships, class_name: "Relationship", 
+                                 foreign_key: "follower_id",
+                                 dependent: :destroy
+ 
+ #when a user has followers, it can be said that they have a passive relationship
+ #since the other user followed the current user, and since a user can have many
+ #followers, we can make a has_many association
+ has_many :passive_relationships, class_name: "Relationship",
+                                  foreign_key: "followed_id",
+                                  dependent: :destroy
+ 
+ 
+ 
+ #by default Rails looks for a foreign_key corresponding to the singular version
+ #of association (followed for followed_id)
+ #since we are using following, we have to indicate the source of the foreign key
+ has_many :following, through: :active_relationships, source: :followed
+ 
+ has_many :followers, through: :passive_relationships, source: :follower
   
   has_secure_password
   #TO WORK, MODEL NEEDS password_digest attribute
@@ -88,11 +113,39 @@ class User < ActiveRecord::Base
    reset_sent_at < 2.hours.ago
   end
   
-  #Defines a proto-feed and currently shows all the users posts
+  #Defines a proto-feed and currently shows all the users posts and followers posts
   # ? escapes the id propoerly before being included in the underlying SQL
   #query therby avoiding SQL injection
   def feed
-   Micropost.where("user_id= ?", id)
+   #for efficiency when we have large amounts of followers, we push the findings
+   # of follower user ids into the db using a subselect
+   following_ids = "SELECT followed_id FROM relationships
+                    WHERE follower_id = :user_id"
+   Micropost.where("user_id IN (#{following_ids}) OR user_id = :user_id", user_id: id)
+   #the above is the same as calling following.map(&:id), mapping users 
+   #followed by id. Above we also add our own id
+  end
+  
+  #with the has_many :through relationships defined above, we can create
+  #powerful utilit methods that can help us follow and unfollow users
+  
+  #Follows a user
+  def follow(other_user)
+   #active relationships creates a follower_id, and this creates an active 
+   #relationship associaeted with user
+   active_relationships.create(followed_id: other_user.id)
+  end
+  
+  #Unfollows a user
+  def unfollow(other_user)
+   active_relationships.find_by(followed_id: other_user.id).destroy
+  end
+  
+  # Returns true of the current user is following the other user
+  def following?(other_user)
+   #due to the association above, has_many :following, we can make this
+   #association
+   following.include?(other_user)
   end
   
   private

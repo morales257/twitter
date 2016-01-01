@@ -33,3 +33,13 @@ users = User.order(:created_at).take(6)
   #content gets pushed to the same user and loops again
   users.each { |user| user.microposts.create!(content: content) }
 end
+
+#Following relationships
+users = User.all
+user = users.first
+following = users[2..50]
+followers = users[3..40]
+#user follows users 2 to 51
+following.each {|followed| user.follow(followed) }
+# users 3 to 41 follow the user back
+followers.each { |follower| follower.follow(user) }

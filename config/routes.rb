@@ -8,9 +8,19 @@ Rails.application.routes.draw do
   
   resources :account_activations, only: [:edit]
   
-  resources :password_resets, only: [:new, :create, :edit, :update]
+  resources :password_resets,     only: [:new, :create, :edit, :update]
   
   resources :microposts,          only: [:create, :destroy]
+  
+  resources :relationships,       only: [:create, :destroy]
+  
+  resources :users do
+    #member method arranges for the routes to respond to URLs containing the user id
+    member do
+      #since both pages will be showing data, we use a get request
+      get :following, :followers
+    end
+  end
 
   get 'users/new'
 

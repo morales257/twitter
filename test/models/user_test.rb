@@ -86,4 +86,38 @@ class UserTest < ActiveSupport::TestCase
       @user.destroy
     end
   end
+  
+  
+  #adding has_many :through association to the user model gives us the ability
+  #to introduce utility methods like follow and unfollow to add a social component
+  #to our site
+  test "shoud follow and unfollow a user" do
+    michael = users(:michael)
+    archer = users(:archer)
+    assert_not michael.following?(archer)
+    michael.follow(archer)
+    assert michael.following?(archer)
+    #this looks for michaels follower_id assoc with archer's followed_id
+    assert archer.followers.include?(michael)
+    michael.unfollow(archer)
+    assert_not michael.following?(archer)
+  end
+  
+  test "feed should have the right posts" do
+    michael = users(:michael)
+    archer  = users(:archer)
+    lana    = users(:lana)
+    #Posts from a followed user
+    lana.microposts.each do |post_following|
+      assert michael.feed.include?(post_following)
+    end
+    #Posts from self
+    michael.microposts.each do |post_self|
+      assert michael.feed.include?(post_self)
+    end
+    #Posts from an unfollowed user
+    archer.microposts.each do |posts_unfollowed|
+      assert_not michael.feed.include?(posts_unfollowed)
+    end
+  end
 end
